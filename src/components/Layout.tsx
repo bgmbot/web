@@ -20,17 +20,17 @@ interface LayoutProps {
   showLoading?: boolean;
 }
 
+const LayoutSpinner = styled(Spinner)`
+position: absolute;
+top: 14px;
+left: 150px;
+z-index: 1;
+`;
+
 const Layout: React.FC<LayoutProps> = observer(({ children, showLoading }) => {
   return (
     <LayoutStyle>
-      {showLoading &&
-        <Spinner css={css`
-          position: absolute;
-          top: 14px;
-          left: 150px;
-          z-index: 1;
-        `} />}
-
+      {showLoading && <LayoutSpinner />}
       {children}
     </LayoutStyle>
   );

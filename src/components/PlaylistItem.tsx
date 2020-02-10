@@ -71,7 +71,7 @@ right: 0;
 display: none;
 min-width: 140px;
 box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-z-index: 2;
+z-index: 1;
 `;
 
 const Menu = styled.div`
