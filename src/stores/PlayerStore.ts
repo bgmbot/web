@@ -1,7 +1,7 @@
 import { observable, action } from 'mobx';
 import RootStore from './RootStore';
 
-interface PlayerProgress {
+export interface PlayerProgress {
   playedSeconds: number;
   played: number;
   loadedSeconds: number;
@@ -33,6 +33,10 @@ export class PlayerStore {
   @action
   public setProgress(progress: any) {
     this.progress = progress;
+
+    if (this.commonStore.hasAdminPermission && this.communicator.isConnected) {
+      this.communicator.broadcastProgress(progress).catch(() => { });
+    }
   }
 
   @action

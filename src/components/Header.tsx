@@ -55,6 +55,7 @@ ${ConnectionIndicator} {
 interface HeaderProps {
   user: User;
   channel: Channel;
+  isChannelOwner?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = (props) => {
@@ -73,6 +74,7 @@ const Header: React.FC<HeaderProps> = (props) => {
       `}>
         <UserWrap>
           <strong>{user.name}</strong>님
+          {props.isChannelOwner ? ' (플레이어)' : ' (보기 전용)'}
       </UserWrap>
         <ChannelWrap>
           <ChannelLink href={`slack://channel?team=${TEAM_ID}&id=${channel.id}`} target="_blank">#{channel.realname}</ChannelLink>

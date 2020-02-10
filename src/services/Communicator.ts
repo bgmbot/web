@@ -1,3 +1,4 @@
+import { PlayerProgress } from './../stores/PlayerStore';
 import { IRequest, IReply, RequestType, EventType } from './models/ApiInterface';
 import { SERVICE_URL } from './../constants';
 import { observable, action, when, isObservableObject, toJS, computed, reaction, runInAction } from 'mobx';
@@ -118,12 +119,20 @@ export default class Communicator {
 
     switch (event) {
       case EventType.PlaylistItemCreated:
-        await bluebird.delay(5000);
+        await bluebird.delay(1000);
         this.commonStore.fetchAndUpdatePlaylist();
         break;
 
       case EventType.ItemDownloaded:
         this.commonStore.setIsReady(reply.content.id);
+        break;
+
+      case EventType.PlaylistUpdated:
+        this.commonStore.fetchAndUpdatePlaylist();
+        break;
+
+      case EventType.PlayerProgressUpdated:
+        this.commonStore.playerStore.setProgress(reply.content.progress);
         break;
     }
   }
@@ -198,6 +207,42 @@ export default class Communicator {
       data: {
         itemId,
         count,
+      },
+    });
+  }
+
+  public async deletePlaylistItem(playlistItemId: number) {
+    return this.request({
+      type: RequestType.DeletePlaylistItem,
+      data: {
+        playlistItemId,
+      },
+    });
+  }
+
+  public async searchRelatedVideos(itemId: number) {
+    return this.request({
+      type: RequestType.SearchRelatedVideos,
+      data: {
+        itemId,
+      },
+    });
+  }
+
+  public async addPlaylistItem(link: string) {
+    return this.request({
+      type: RequestType.AddPlaylistItem,
+      data: {
+        link,
+      },
+    });
+  }
+
+  public async broadcastProgress(progress: PlayerProgress) {
+    return this.request({
+      type: RequestType.BroadcastProgress,
+      data: {
+        progress,
       },
     });
   }

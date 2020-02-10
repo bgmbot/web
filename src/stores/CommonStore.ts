@@ -1,3 +1,4 @@
+import { ItemSource } from './models/Item';
 import { reorder } from './../utils/array';
 import { MessageBox } from 'element-react';
 import { PlaylistItem, PlaylistItemSource, PlaylistItemState } from './models/PlaylistItem';
@@ -26,7 +27,7 @@ export default class CommonStore {
     this.sessionId = sessionId;
   }
 
-  private get playerStore() {
+  public get playerStore() {
     return this.rootStore.playerStore;
   }
 
@@ -63,10 +64,18 @@ export default class CommonStore {
   public user: User;
 
   @observable
+  public hasAdminPermission = false;
+
+  @observable
   public channel: Channel;
 
   @observable
   public playlist: PlaylistItem[] = [];
+
+  @computed
+  public get availablePlaylist() {
+    return this.playlist.filter(({ isDeleted }) => !isDeleted);
+  }
 
   @observable
   public isLoading = false;
@@ -93,15 +102,17 @@ export default class CommonStore {
     const result = await this.communicator.authenticate(this.token);
     if (!result?.ok) {
       this.isAuthenticated = false;
-      MessageBox.alert(result?.content, '인증 오류', { type: 'error' });
+      const content = result?.content === 'jwt must be provided' ? '인증 토큰이 없습니다.\n/bgmplayer로 접근하신 것이 맞나요?' : result?.content;
+      MessageBox.alert(content, '인증 오류', { type: 'error' });
       return;
     }
 
-    const { user, channel } = result?.content;
+    const { user, channel, isChannelOwner } = result?.content;
 
     this.user = new User(user.id, user);
     this.channel = new Channel(channel.id, channel);
 
+    this.hasAdminPermission = isChannelOwner;
     this.isAuthenticated = true;
   }
 
@@ -334,5 +345,71 @@ export default class CommonStore {
         this.addRelatedVideos(item.itemId as number, 1);
       }
     } catch { }
+  }
+
+  @action
+  public async deletePlaylistItem(id: number) {
+    this.isLoading = true;
+
+    try {
+      const result = await this.communicator.deletePlaylistItem(id);
+      if (!result?.ok) {
+        return this.pageStore.showToast(result?.content, {
+          appearance: 'error',
+          autoDismiss: true,
+        });
+      }
+      if (result?.content === true) {
+        await this.fetchAndUpdatePlaylist();
+        return this.pageStore.showToast('곡이 삭제되었습니다.', {
+          appearance: 'success',
+          autoDismiss: true,
+        });
+      }
+    } catch (e) {
+      return this.pageStore.showToast(e.message, {
+        appearance: 'error',
+        autoDismiss: true,
+      });
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  @action
+  public async addPlaylistItem(link: string) {
+    this.isLoading = true;
+
+    try {
+      const result = await this.communicator.addPlaylistItem(link);
+      if (!result?.ok) {
+        return this.pageStore.showToast(result?.content, {
+          appearance: 'error',
+          autoDismiss: true,
+        });
+      }
+
+      if (result?.content) {
+        const {
+          item,
+        } = result?.content as {
+            item: ItemSource;
+            playlistItem: PlaylistItemSource;
+        };
+
+        await this.fetchAndUpdatePlaylist();
+        return this.pageStore.showToast(`"${item.title}" 곡이 플레이리스트에 추가되었습니다.`, {
+          appearance: 'success',
+          autoDismiss: true,
+        });
+      }
+    } catch (e) {
+      return this.pageStore.showToast(e.message, {
+        appearance: 'error',
+        autoDismiss: true,
+      });
+    } finally {
+      this.isLoading = false;
+    }
   }
 }

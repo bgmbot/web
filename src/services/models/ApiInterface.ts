@@ -7,6 +7,10 @@ export enum RequestType {
   AddRelatedVideos = 'AddRelatedVideos',
   SetIsPlaying = 'SetIsPlaying',
   ReturnVolume = 'ReturnVolume',
+  DeletePlaylistItem = 'DeletePlaylistItem',
+  SearchRelatedVideos = 'SearchRelatedVideos',
+  AddPlaylistItem = 'AddPlaylistItem',
+  BroadcastProgress = 'BroadcastProgress',
 }
 
 export enum EventType {
@@ -14,6 +18,9 @@ export enum EventType {
   ItemDownloaded = 'ItemDownloaded',
   VolumeRequested = 'VolumeRequested',
   VolumeSetRequested = 'VolumeSetRequested',
+
+  PlaylistUpdated = 'PlaylistUpdated',
+  PlayerProgressUpdated = 'PlayerProgressUpdated',
 }
 
 export interface IRequest {

@@ -9,6 +9,9 @@ import Layout from '../components/Layout';
 import Playlist from '../components/Playlist';
 import { useStore, useStoreObserver } from '../utils/mobx';
 import Helmet from 'react-helmet';
+import SearchModal from '../components/SearchModal';
+import FakePlayer from '../components/FakePlayer';
+import { PlayerProgress } from '../stores/PlayerStore';
 
 
 const MainPage = () => {
@@ -16,16 +19,26 @@ const MainPage = () => {
     playlist,
     isLoading,
     nowPlaying,
+    hasAdminPermission,
   } = useStoreObserver('commonStore', (store) => ({
-    playlist: store.playlist,
+    playlist: store.availablePlaylist,
     isLoading: store.isLoading,
     nowPlaying: store.nowPlaying,
+    hasAdminPermission: store.hasAdminPermission,
+  }));
+
+  const {
+    showSearchModal,
+  } = useStoreObserver('pageStore', (store) => ({
+    showSearchModal: store.showSearchModal,
   }));
 
   const {
     volume,
+    progress,
   } = useStoreObserver('playerStore', (store) => ({
     volume: store.volume,
+    progress: store.progress,
   }));
 
   const commonStore = useStore('commonStore');
@@ -77,31 +90,36 @@ const MainPage = () => {
   }, [video, onVolumeChange]);
 
   return (
-    <Layout showLoading={isLoading}>
-      <Helmet>
-        <title>{title}</title>
-      </Helmet>
-      <Header user={user} channel={channel} />
-      <Player
-        ref={playerRef}
-        loop={false}
-        width="100%"
-        height="30px"
-        url={nowPlaying?.streamLink}
-        volume={volume}
-        playing={true}
-        controls={true}
-        onProgress={onProgress}
-        onEnded={onEnded}
-        onSeek={console.log}
-        css={css`
-        margin: 0 0 10px;
-        `}
-      />
-      {playlist.length > 0
-        ? <Playlist playlist={playlist} onItemMove={onItemMove} />
-        : isLoading ? <div /> : <div style={{ textAlign: 'center' }}><FontAwesomeIcon icon={faTrash} /> 플레이리스트가 비어있어요.</div>}
-    </Layout>
+    <React.Fragment>
+      {showSearchModal && <SearchModal />}
+      <Layout showLoading={isLoading}>
+        <Helmet>
+          <title>{title}</title>
+        </Helmet>
+        <Header user={user} channel={channel} isChannelOwner={hasAdminPermission} />
+        {hasAdminPermission
+          ? <Player
+            ref={playerRef}
+            loop={false}
+            width="100%"
+            height="30px"
+            url={nowPlaying?.streamLink}
+            volume={volume}
+            playing={true}
+            controls={true}
+            onProgress={onProgress}
+            onEnded={onEnded}
+            onSeek={console.log}
+            css={css`
+          margin: 0 0 10px;
+          `} />
+          : <FakePlayer progress={progress} nowPlaying={nowPlaying} />
+          }
+        {playlist.length > 0
+          ? <Playlist playlist={playlist} onItemMove={hasAdminPermission ? onItemMove : undefined} readonly={!hasAdminPermission} />
+          : isLoading ? <div /> : <div style={{ textAlign: 'center' }}><FontAwesomeIcon icon={faTrash} /> 플레이리스트가 비어있어요.</div>}
+      </Layout>
+    </React.Fragment>
   );
 }
 

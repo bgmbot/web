@@ -2,6 +2,7 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
 import Spinner from './Spinner';
+import { observer } from 'mobx-react';
 
 const LayoutStyle = styled.div`
   position: relative;
@@ -19,20 +20,20 @@ interface LayoutProps {
   showLoading?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, showLoading }) => {
+const Layout: React.FC<LayoutProps> = observer(({ children, showLoading }) => {
   return (
     <LayoutStyle>
       {showLoading &&
         <Spinner css={css`
           position: absolute;
-          top: 15px;
-          left: 75px;
+          top: 14px;
+          left: 150px;
           z-index: 1;
         `} />}
 
       {children}
     </LayoutStyle>
   );
-};
+});
 
 export default Layout;

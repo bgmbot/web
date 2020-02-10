@@ -40,13 +40,13 @@ overflow-y: auto;
 
 interface PlaylistProps {
   playlist: Item[];
+  readonly?: boolean;
   onItemMove?: (id: number, moveBefore: number | null) => void;
 }
 
 
 const Playlist: React.FC<PlaylistProps> = (props) => {
-  const playlistId = uuid.v4();
-
+  const [playlistId] = useState(uuid.v4());
   const onDragEnd = useCallback((result: DropResult) => {
     if (result.reason === 'CANCEL' || !result.destination || result.source.index === result.destination.index) {
       return;
@@ -54,13 +54,15 @@ const Playlist: React.FC<PlaylistProps> = (props) => {
 
     const sourceIndex = result.source.index;
     const destinationIndex = result.destination.index;
-    console.info(sourceIndex, destinationIndex);
 
     const source = props.playlist[sourceIndex];
     let next = props.playlist[destinationIndex + 1];
     if (source === next || sourceIndex - destinationIndex > 1) {
       next = props.playlist[destinationIndex];
     }
+
+    console.info('source', sourceIndex, 'destination', destinationIndex);
+    console.info('trying to move', source.id, source.title, 'before', next?.id, next?.title);
 
     props.onItemMove?.(source.id as number, (next?.id ?? null) as number | null);
   }, [props.playlist, props.onItemMove]);
@@ -89,9 +91,9 @@ const Playlist: React.FC<PlaylistProps> = (props) => {
       >
         {({ droppableProps, innerRef, placeholder }) => (
           <PlaylistStyle id={playlistId} ref={innerRef} {...droppableProps}>
-            {props.playlist.filter(({ isDeleted }) => !isDeleted).map((item, index) => (
+            {props.playlist.map((item, index) => (
               <Draggable key={item.id} draggableId={String(item.id)} index={index}>
-                {(provided) => <PlaylistItem item={item} innerRef={provided.innerRef} provided={provided} />}
+                {(provided) => <PlaylistItem item={item} innerRef={provided.innerRef} readonly={props.readonly} provided={!props.readonly ? provided : undefined} />}
               </Draggable>
             ))}
             {placeholder}
