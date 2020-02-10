@@ -9,6 +9,7 @@ import { observable, action, reaction, computed, when } from 'mobx';
 import User from './models/User';
 import Channel from './models/Channel';
 import uuid from 'uuid';
+import { configureScope } from '@sentry/browser';
 
 export default class CommonStore {
   public readonly communicator = new Communicator(this);
@@ -114,6 +115,16 @@ export default class CommonStore {
 
     this.hasAdminPermission = isChannelOwner;
     this.isAuthenticated = true;
+
+    configureScope((scope) => {
+      scope.setUser({
+        id: this.user.id as string,
+        username: this.user.name,
+      });
+      scope.setTag('bgm:channel', channel);
+      scope.setExtra('isChannelOwner', isChannelOwner);
+      scope.setTag('isAuthenticated', 'true');
+    });
   }
 
   @action
