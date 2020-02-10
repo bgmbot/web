@@ -21,6 +21,7 @@ margin: auto;
 background-color: #fefefe;
 box-shadow: 0 0 10px rgba(0,0,0,.1);
 padding: 20px;
+z-index: 5;
 `;
 
 const Title = styled.h1`
@@ -37,6 +38,7 @@ overflow-y: scroll;
 
 interface SearchResultItemStyleProps {
   cursor?: any;
+  visible?: boolean;
 }
 
 const SearchResultItemStyle = styled.div<SearchResultItemStyleProps>`
@@ -44,6 +46,7 @@ display: flex;
 margin: 5px;
 padding: 8px;
 cursor: ${props => props.cursor};
+visibility: ${props => props.visible ? 'visible' : 'hidden'};
 
 h3 {
   margin: 0;
@@ -75,15 +78,17 @@ time {
 
 interface SearchResultItemProps {
   item: ItemSource;
+  visible?: boolean;
   onClick?: () => void;
+  onLoad?: () => void;
 }
 
-const SearchResultItem: React.FC<SearchResultItemProps> = ({ item, onClick }) => {
+const SearchResultItem: React.FC<SearchResultItemProps> = ({ visible, item, onClick, onLoad }) => {
   const duration = Duration.fromMillis(item.duration * 1000).toFormat('mm:ss');
 
   return (
-    <SearchResultItemStyle cursor={onClick && 'pointer'} title={item.title} onClick={onClick}>
-      <img src={item.thumbnailUrl} alt="" height={40} />
+    <SearchResultItemStyle visible={visible ?? true} cursor={onClick && 'pointer'} title={item.title} onClick={onClick}>
+      <img src={item.thumbnailUrl} onLoad={onLoad} onError={onLoad} alt="" height={40} />
       <div>
           <h3>{item.title}</h3>
           <time>{duration}</time>
@@ -143,17 +148,22 @@ const SearchModal = () => {
     catch { }
   }, [pageStore, commonStore]);
 
+  const [loadedCount, setLoadedCount] = useState(0);
+  const onLoad = useCallback(() => {
+    setLoadedCount(loadedCount => loadedCount + 1);
+  }, [setLoadedCount]);
+
   return (
     <StyledModal isOpen={showSearchModal} shouldCloseOnOverlayClick={true} onRequestClose={handleCloseModal} ariaHideApp={false}>
       <Title>{options.title}</Title>
-      {isSearching
+      {isSearching || (searchResult && loadedCount < searchResult.length)
         ? <Loading style={{ marginTop: 150 }} />
         : null
       }
       <SearchResultArea>
         {searchResult?.map((result) => {
           return (
-            <SearchResultItem key={result.link} item={result} onClick={() => addPlaylistItemFromBasicInfo(result)} />
+            <SearchResultItem key={result.link} item={result} visible={loadedCount === searchResult.length} onClick={() => addPlaylistItemFromBasicInfo(result)} onLoad={onLoad} />
           );
         })}
       </SearchResultArea>

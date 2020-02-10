@@ -11,7 +11,6 @@ import { useStore, useStoreObserver } from '../utils/mobx';
 import Helmet from 'react-helmet';
 import SearchModal from '../components/SearchModal';
 import FakePlayer from '../components/FakePlayer';
-import { PlayerProgress } from '../stores/PlayerStore';
 
 
 const MainPage = () => {
