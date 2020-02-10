@@ -4,6 +4,7 @@ export enum RequestType {
   GetPlaylist = 'GetPlaylist',
   GetPlaylistItemsById = 'GetPlaylistItemsById',
   MovePlaylistItem = 'MovePlaylistItem',
+  AddRelatedVideos = 'AddRelatedVideos',
   SetIsPlaying = 'SetIsPlaying',
   ReturnVolume = 'ReturnVolume',
 }

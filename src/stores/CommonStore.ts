@@ -4,7 +4,7 @@ import { PlaylistItem, PlaylistItemSource, PlaylistItemState } from './models/Pl
 import RootStore from './RootStore';
 import Communicator from '../services/Communicator';
 
-import { observable, action, reaction, computed } from 'mobx';
+import { observable, action, reaction, computed, when } from 'mobx';
 import User from './models/User';
 import Channel from './models/Channel';
 import uuid from 'uuid';
@@ -71,10 +71,21 @@ export default class CommonStore {
   @observable
   public isLoading = false;
 
+  @observable
+  public isUpdatingPlaylist = false;
+
   // TODO: try to find a item with id and update
   @action
   public async updatePlaylist(sources: PlaylistItemSource[]) {
-    this.playlist = sources.map(source => new PlaylistItem(source.id, source));
+    this.playlist = sources.map((source) => {
+      const item = this.playlist.find(x => x.id === source.id);
+      if (item) {
+        item.update(source);
+        return item;
+      } else {
+        return new PlaylistItem(source.id, source);
+      }
+    });
   }
 
   @action
@@ -95,8 +106,13 @@ export default class CommonStore {
   }
 
   @action
-  public async fetchAndUpdatePlaylist() {
+  public async fetchAndUpdatePlaylist(addRelated = false) {
+    await when(() => !this.isUpdatingPlaylist);
+
+    this.isUpdatingPlaylist = true;
     this.isLoading = true;
+
+    let shouldSetNowPlayingId: number | null = null;
 
     try {
       const result = await this.communicator.getPlaylist();
@@ -113,12 +129,58 @@ export default class CommonStore {
         nextPlaylistItems: PlaylistItemSource[];
       };
 
+      if (data.nowPlaying === null && this.nowPlaying && this.playerStore.playing && this.playerStore.progress.playedSeconds > 0) {
+        data.nowPlaying = this.nowPlaying.getSource();
+        shouldSetNowPlayingId = this.nowPlaying.id as number;
+        console.info('data.nowPlaying is null but it does exist', data.nowPlaying);
+        console.info('shouldSetNowPlayingId =', shouldSetNowPlayingId);
+      }
+
       const playlist = [
         ...data.previousPlaylistItems,
         data.nowPlaying,
         ...data.nextPlaylistItems,
       ].filter(x => x !== null) as PlaylistItemSource[];
       this.updatePlaylist(playlist);
+    } catch (e) {
+      return this.pageStore.showToast(e.message, {
+        appearance: 'error',
+        autoDismiss: true,
+      });
+    } finally {
+      this.isLoading = false;
+      this.isUpdatingPlaylist = false;
+
+      if (shouldSetNowPlayingId) {
+        this.setIsPlaying(shouldSetNowPlayingId);
+      }
+    }
+  }
+
+  @action
+  public async addRelatedVideos(itemId: number, count = 1) {
+    await when(() => !this.isLoading);
+    this.isLoading = true;
+
+    try {
+      const result = await this.communicator.addRelatedVideos(itemId, count);
+      if (!result?.ok) {
+        return this.pageStore.showToast(result?.content, {
+          appearance: 'error',
+          autoDismiss: true,
+        });
+      }
+
+      const addeds = result.content;
+      if (Array.isArray(addeds) && addeds.length > 0) {
+        this.pageStore.showToast(`연관 음악 ${addeds.length}개가 추가되었습니다.`, {
+          appearance: 'info',
+          autoDismiss: true,
+        });
+
+        this.isLoading = false;
+        this.fetchAndUpdatePlaylist();
+      }
     } catch (e) {
       return this.pageStore.showToast(e.message, {
         appearance: 'error',
@@ -262,6 +324,15 @@ export default class CommonStore {
       this.isLoading = false;
     }
 
-    this.fetchAndUpdatePlaylist();
+    try {
+      await this.fetchAndUpdatePlaylist();
+
+      const itemIndex = this.playlist.findIndex(({ id }) => id === item.id);
+      console.info('itemIndex', itemIndex, this.playlist.length);
+      if (itemIndex > -1 && itemIndex >= this.playlist.length - 2) {
+        console.info('addRelatedVideos called w/', item.id);
+        this.addRelatedVideos(item.itemId as number, 1);
+      }
+    } catch { }
   }
 }

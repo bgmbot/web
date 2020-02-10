@@ -118,7 +118,7 @@ export default class Communicator {
 
     switch (event) {
       case EventType.PlaylistItemCreated:
-        await bluebird.delay(1000);
+        await bluebird.delay(5000);
         this.commonStore.fetchAndUpdatePlaylist();
         break;
 
@@ -187,6 +187,17 @@ export default class Communicator {
       type: RequestType.SetIsPlaying,
       data: {
         id,
+      },
+    });
+  }
+
+  @action
+  public async addRelatedVideos(itemId: number, count = 1) {
+    return this.request({
+      type: RequestType.AddRelatedVideos,
+      data: {
+        itemId,
+        count,
       },
     });
   }

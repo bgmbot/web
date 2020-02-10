@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx';
+import { observable, action, toJS } from 'mobx';
 import * as _ from 'lodash';
 
 abstract class Entity<T> {
@@ -19,6 +19,10 @@ abstract class Entity<T> {
   public updatePartial(source: Partial<T>) {
     const newSource = _.cloneDeep(this.source);
     this.source = _.mergeWith(newSource, source);
+  }
+
+  public getSource(): T {
+    return toJS(this.source);
   }
 }
 
