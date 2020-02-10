@@ -4,6 +4,7 @@ import { SERVICE_URL } from './../constants';
 import { observable, action, when, isObservableObject, toJS, computed, reaction, runInAction } from 'mobx';
 import bluebird from 'bluebird';
 import CommonStore from '../stores/CommonStore';
+import { captureException } from '@sentry/browser';
 
 export default class Communicator {
   private connection!: WebSocket;
@@ -117,6 +118,8 @@ export default class Communicator {
   private async handleEvent(reply: IReply) {
     const { event } = reply.content;
 
+    console.info('event', event);
+
     switch (event) {
       case EventType.PlaylistItemCreated:
         await bluebird.delay(1000);
@@ -133,6 +136,20 @@ export default class Communicator {
 
       case EventType.PlayerProgressUpdated:
         this.commonStore.playerStore.setProgress(reply.content.progress);
+        break;
+
+      case EventType.VolumeRequested:
+        this.request({
+          type: RequestType.ReturnVolume,
+          data: {
+            volume: this.commonStore.playerStore.volume,
+            token: reply.content.token,
+          },
+        }).catch(captureException);
+        break;
+
+      case EventType.VolumeSetRequested:
+        this.commonStore.playerStore.setVolume(reply.content.volume);
         break;
     }
   }

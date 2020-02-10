@@ -1,4 +1,5 @@
 import { observable, action } from 'mobx';
+import * as _ from 'lodash';
 import RootStore from './RootStore';
 
 export interface PlayerProgress {
@@ -39,9 +40,17 @@ export class PlayerStore {
     }
   }
 
-  @action
-  public setVolume(volume: number) {
+  public setVolume = _.debounce(action((volume: number) => {
+    if (this.volume === volume) {
+      return;
+    }
+
     console.info('volume updated', volume);
     this.volume = volume;
-  }
+
+    this.rootStore.pageStore.showToast(`볼륨이 ${Math.round(volume * 100)}%로 설정되었습니다.`, {
+      appearance: 'info',
+      autoDismiss: true,
+    });
+  }).bind(this), 500);
 }
