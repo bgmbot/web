@@ -162,7 +162,7 @@ export default class CommonStore {
   }
 
   @action
-  public async fetchAndUpdatePlaylist(addRelated = false) {
+  public async fetchAndUpdatePlaylist() {
     await when(() => !this.isUpdatingPlaylist);
 
     this.isUpdatingPlaylist = true;
