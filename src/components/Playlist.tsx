@@ -73,12 +73,28 @@ const Playlist: React.FC<PlaylistProps> = (props) => {
   }));
   useEffect((...args) => {
     const div = document.getElementById(playlistId);
+
     if (div && nowPlayingIndex !== nowPlayingIndexState) {
       setNowPlayingIndexState(nowPlayingIndex);
-      div.scrollTo({
-        top: Math.max(0, 35 * nowPlayingIndex - 35),
-        behavior: 'smooth',
-      });
+      console.info(nowPlayingIndex);
+
+      // 스크롤
+      const targetElement = div.querySelectorAll(':scope > div')[nowPlayingIndex];
+      if (targetElement) {
+        const intersectionObserver = new IntersectionObserver(([entry]) => {
+          intersectionObserver.unobserve(targetElement);
+          intersectionObserver.disconnect();
+
+          if (!entry.isIntersecting) {
+            console.info('entry is not intersecting with parent');
+            targetElement.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, {
+          root: div,
+          threshold: 1.0,
+        });
+        intersectionObserver.observe(targetElement);
+      }
     }
   }, [nowPlayingIndex, nowPlayingIndexState, playlistId]);
 
