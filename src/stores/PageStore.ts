@@ -3,6 +3,7 @@ import RootStore from './RootStore';
 import { observable, action, when, computed } from 'mobx';
 import SearchOptions from './models/SearchOptions';
 import { useToasts } from 'react-toast-notifications';
+import { withScope, captureEvent, Severity } from '@sentry/browser';
 
 type AddToast = ReturnType<typeof useToasts>['addToast'];
 
@@ -46,6 +47,22 @@ export default class PageStore {
 
   public async showToast(...args: Parameters<AddToast>) {
     await when(() => this.isToastRefSet);
+
+    if (args.length > 2 && args[1]) {
+      const options = args[1];
+      if (options.appearance === 'error') {
+        withScope(scope => {
+          scope.setFingerprint(['TOAST', 'ERROR']);
+
+          const eventId = captureEvent({
+            message: args[0] as any as string,
+            level: Severity.Log,
+          });
+          console.warn('event', eventId);
+        });
+      }
+    }
+
     this.toastRef.current?.add(...args);
   }
 }
