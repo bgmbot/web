@@ -18,11 +18,19 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import { ToastProvider } from 'react-toast-notifications';
+import { TEAM_ID, BASE_URL, SERVICE_URL } from './constants';
 
 library.add(fas);
 i18n.use(locale);
 
 Sentry.init({ dsn: 'https://1496aefc64a6450a8d184cb07b5ac859@sentry.io/2371563' });
+Sentry.configureScope(scope => {
+  scope.setTags({
+    teamId: TEAM_ID,
+    baseUrl: BASE_URL,
+    serviceUrl: SERVICE_URL,
+  });
+});
 
 const myCache = createCache();
 myCache.compat = true;
