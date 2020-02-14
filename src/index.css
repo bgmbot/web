@@ -39,3 +39,11 @@ code {
 .light {
   font-weight: 300;
 }
+
+.ReactModal__Overlay {
+  z-index: 100;
+}
+
+.el-autocomplete {
+  width: 100%;
+}

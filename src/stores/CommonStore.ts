@@ -65,7 +65,16 @@ export default class CommonStore {
   public user: User;
 
   @observable
-  public hasAdminPermission = false;
+  public role: 'admin' | 'staff' | 'user' = 'user';
+
+  @computed
+  public get hasAdminPermission() {
+    return this.role === 'admin';
+  }
+
+  public get hasStaffPermission() {
+    return this.role === 'staff';
+  }
 
   @observable
   public channel: Channel;
@@ -108,12 +117,12 @@ export default class CommonStore {
       return;
     }
 
-    const { user, channel, isChannelOwner } = result?.content;
+    const { user, channel, isChannelOwner, isPlayer } = result?.content;
 
     this.user = new User(user.id, user);
     this.channel = new Channel(channel.id, channel);
 
-    this.hasAdminPermission = isChannelOwner;
+    this.role = isPlayer ? 'admin' : isChannelOwner ? 'staff' : 'user';
     this.isAuthenticated = true;
 
     configureScope((scope) => {
@@ -122,9 +131,34 @@ export default class CommonStore {
         username: this.user.name,
       });
       scope.setTag('bgm:channel', channel);
+      scope.setExtra('role', this.role);
       scope.setExtra('isChannelOwner', isChannelOwner);
+      scope.setExtra('isPlayer', isPlayer);
       scope.setTag('isAuthenticated', 'true');
     });
+
+    switch (this.role) {
+      case 'admin':
+        this.pageStore.showToast('플레이어로 로그인되었습니다.', {
+          appearance: 'info',
+          autoDismiss: true,
+        });
+        break;
+
+      case 'staff':
+        this.pageStore.showToast('이미 다른 곳에서 플레이어가 동작하고 있어 수정 전용 모드로 동작합니다.', {
+          appearance: 'info',
+          autoDismiss: true,
+        });
+        break;
+
+      case 'user':
+        this.pageStore.showToast('안녕하세요! :)', {
+          appearance: 'info',
+          autoDismiss: true,
+        });
+        break;
+    }
   }
 
   @action
@@ -336,7 +370,13 @@ export default class CommonStore {
     try {
       this.isLoading = true;
 
-      await this.communicator.setIsPlaying(item.id as number);
+      const result = await this.communicator.setIsPlaying(item.id as number);
+      if (!result?.ok) {
+        return this.pageStore.showToast(result?.content, {
+          appearance: 'error',
+          autoDismiss: true,
+        });
+      }
     } catch (e) {
       this.pageStore.showToast(e.message, {
         appearance: 'error',

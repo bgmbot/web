@@ -9,7 +9,7 @@ import styled from '@emotion/styled';
 import { Duration } from 'luxon';
 import { observer } from 'mobx-react';
 import { useToasts } from 'react-toast-notifications';
-import SearchOptions, { SearchOptionsMode } from '../stores/models/SearchOptions';
+import SearchOptions, { SearchOptionsMode, SearchFor } from '../stores/models/SearchOptions';
 import { MessageBox } from 'element-react';
 
 interface ItemStyleProps {
@@ -153,7 +153,7 @@ ${props => props.isPlaying ? {
 interface PlaylistItemProps {
   provided?: DraggableProvided;
   item: Item;
-  readonly?: boolean;
+  role: 'admin' | 'staff' | 'user';
   [key: string]: any;
 }
 
@@ -170,7 +170,8 @@ const Icon: React.FC<IconProps> = (props) => {
     <FontAwesomeIcon icon={icon} css={css`
     color: rgba(0, 0, 0, .2);
     margin-right: 10px;
-      cursor: ${props.isPlaying ? 'not-allowed' : props.isReady ? 'pointer' : 'not-allowed'};
+    font-size: 16px;
+      cursor: ${!props.onClick ? 'not-allowed' : props.isPlaying ? 'not-allowed' : props.isReady ? 'pointer' : 'not-allowed'};
       animation: ${props.isReady ? props.isPlaying ? css`2s ease-in-out infinite ${playing}` : null : css`2s linear infinite ${spinner}`};
     `} onClick={props.onClick} />
   );
@@ -206,6 +207,7 @@ const PlaylistItem: React.FC<PlaylistItemProps> = observer((props) => {
   const searchRelatedVideos = useCallback(() => {
     const searchOptions = new SearchOptions();
     searchOptions.by = SearchOptionsMode.ItemId;
+    searchOptions.for = SearchFor.RelatedVideos;
     searchOptions.itemId = item.itemId as number;
 
     pageStore.setSearchOptions(searchOptions);
@@ -229,7 +231,7 @@ const PlaylistItem: React.FC<PlaylistItemProps> = observer((props) => {
       isPlaying={item.isPlaying}
       isReady={item.isReady}
     >
-      {!props.readonly && <Icon isReady={item.isReady} isPlaying={item.isPlaying} onClick={play} />}
+      <Icon isReady={item.isReady} isPlaying={item.isPlaying} onClick={props.role === 'admin' ? play : undefined} />
       <img src={item.item.thumbnailUrl} width="16" height="16" alt="" />
       <Title title={item.title}>{item.title.replace(/ {1,}/g, ' ')}</Title>
       {duration && <Length>{duration.toFormat('mm:ss')}</Length>}

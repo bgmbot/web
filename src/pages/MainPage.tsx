@@ -18,12 +18,12 @@ const MainPage = () => {
     playlist,
     isLoading,
     nowPlaying,
-    hasAdminPermission,
+    role,
   } = useStoreObserver('commonStore', (store) => ({
     playlist: store.availablePlaylist,
     isLoading: store.isLoading,
     nowPlaying: store.nowPlaying,
-    hasAdminPermission: store.hasAdminPermission,
+    role: store.role,
   }));
 
   const {
@@ -95,8 +95,8 @@ const MainPage = () => {
         <Helmet>
           <title>{title}</title>
         </Helmet>
-        <Header user={user} channel={channel} isChannelOwner={hasAdminPermission} />
-        {hasAdminPermission
+        <Header user={user} channel={channel} role={role} />
+        {role === 'admin'
           ? <Player
             ref={playerRef}
             loop={false}
@@ -115,7 +115,7 @@ const MainPage = () => {
           : <FakePlayer progress={progress} nowPlaying={nowPlaying} />
           }
         {playlist.length > 0
-          ? <Playlist playlist={playlist} onItemMove={hasAdminPermission ? onItemMove : undefined} readonly={!hasAdminPermission} />
+          ? <Playlist playlist={playlist} onItemMove={role !== 'user' ? onItemMove : undefined} role={role} />
           : isLoading ? <div /> : <div style={{ textAlign: 'center' }}><FontAwesomeIcon icon={faTrash} /> 플레이리스트가 비어있어요.</div>}
       </Layout>
     </React.Fragment>

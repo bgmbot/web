@@ -11,6 +11,8 @@ export enum RequestType {
   SearchRelatedVideos = 'SearchRelatedVideos',
   AddPlaylistItem = 'AddPlaylistItem',
   BroadcastProgress = 'BroadcastProgress',
+  GetAutoCompletionKeywords = 'GetAutoCompletionKeywords',
+  Search = 'Search',
 }
 
 export enum EventType {

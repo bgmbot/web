@@ -17,7 +17,6 @@ import createCache from '@emotion/cache';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import '@fortawesome/fontawesome-svg-core/styles.css';
-import makeInspectable from 'mobx-devtools-mst';
 import { ToastProvider } from 'react-toast-notifications';
 
 library.add(fas);
@@ -30,8 +29,6 @@ myCache.compat = true;
 
 const browserHistory = createBrowserHistory();
 const rootStore = new RootStore();
-
-makeInspectable(rootStore);
 
 const history = syncHistoryWithStore(browserHistory, rootStore.routerStore);
 

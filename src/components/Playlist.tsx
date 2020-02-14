@@ -7,7 +7,7 @@ import { useStoreObserver } from '../utils/mobx';
 import uuid from 'uuid';
 
 const PlaylistStyle = styled.div`
-height: auto;
+height: 100%;
 overflow-y: auto;
 
 /* Turn on custom 8px wide scrollbar */
@@ -39,8 +39,8 @@ overflow-y: auto;
 `;
 
 interface PlaylistProps {
+  role: 'admin' | 'staff' | 'user';
   playlist: Item[];
-  readonly?: boolean;
   onItemMove?: (id: number, moveBefore: number | null) => void;
 }
 
@@ -93,7 +93,7 @@ const Playlist: React.FC<PlaylistProps> = (props) => {
           <PlaylistStyle id={playlistId} ref={innerRef} {...droppableProps}>
             {props.playlist.map((item, index) => (
               <Draggable key={item.id} draggableId={String(item.id)} index={index}>
-                {(provided) => <PlaylistItem item={item} innerRef={provided.innerRef} readonly={props.readonly} provided={!props.readonly ? provided : undefined} />}
+                {(provided) => <PlaylistItem item={item} innerRef={provided.innerRef} role={props.role} provided={props.role !== 'user' ? provided : undefined} />}
               </Draggable>
             ))}
             {placeholder}

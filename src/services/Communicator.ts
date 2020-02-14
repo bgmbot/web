@@ -163,7 +163,7 @@ export default class Communicator {
     };
     const whenPromise = when(() => this.messages.has(request.ts));
     const promise = Promise.race([
-      whenPromise.catch(() => { }),
+      whenPromise.catch((e) => { console.error(e); }),
       bluebird.delay(timeoutMs).then(() => {
         whenPromise.cancel();
 
@@ -260,6 +260,24 @@ export default class Communicator {
       type: RequestType.BroadcastProgress,
       data: {
         progress,
+      },
+    });
+  }
+
+  public async getAutoCompletionKeywords(keyword: string) {
+    return this.request({
+      type: RequestType.GetAutoCompletionKeywords,
+      data: {
+        keyword,
+      },
+    });
+  }
+
+  public async search(keyword: string) {
+    return this.request({
+      type: RequestType.Search,
+      data: {
+        keyword,
       },
     });
   }
