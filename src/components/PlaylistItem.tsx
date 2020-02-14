@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, forwardRef } from 'react';
 import { PlaylistItem as Item } from '../stores/models/PlaylistItem';
 import { DraggableProvided } from 'react-beautiful-dnd';
 import { keyframes, css } from '@emotion/core';
@@ -177,11 +177,12 @@ const Icon: React.FC<IconProps> = (props) => {
   );
 };
 
-const PlaylistItem: React.FC<PlaylistItemProps> = observer((props) => {
+const PlaylistItem: React.FC<PlaylistItemProps> = observer(forwardRef((props, refPointer) => {
   const { provided, item } = props;
 
   const setRef = (ref: any) => {
     provided?.innerRef(ref);
+    typeof refPointer === 'function' && refPointer(ref);
   };
 
   const commonStore = useStore('commonStore');
@@ -246,7 +247,7 @@ const PlaylistItem: React.FC<PlaylistItemProps> = observer((props) => {
       </MenuWrap>
     </ItemStyle>
   );
-});
+}));
 
 export default PlaylistItem;
 
