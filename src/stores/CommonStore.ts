@@ -299,12 +299,12 @@ export default class CommonStore {
 
   @computed
   public get nowPlayingIndex() {
-    return this.playlist.findIndex(x => x.isPlaying);
+    return this.availablePlaylist.findIndex(x => x.isPlaying);
   }
 
   @computed
   public get nowPlaying() {
-    return this.playlist.find(x => x.isPlaying);
+    return this.availablePlaylist.find(x => x.isPlaying);
   }
 
   public getNextPlaylistItem() {
@@ -315,7 +315,7 @@ export default class CommonStore {
 
     let next: PlaylistItem | undefined = nowPlaying;
     // eslint-disable-next-line no-loop-func
-    while ((next = this.playlist.find(x => x.id === next?.nextId)) !== undefined) {
+    while ((next = this.availablePlaylist.find(x => x.id === next?.nextId)) !== undefined) {
       if (!next.isReady) {
         this.pageStore.showToast(`"${next.title}" 곡이 아직 다운로드되지 않아 다음 곡을 재생합니다.`, {
           appearance: 'warning',
@@ -354,7 +354,7 @@ export default class CommonStore {
 
   @action
   public async setIsPlaying(id: number) {
-    const item = this.playlist.find(x => x.id === id);
+    const item = this.availablePlaylist.find(x => x.id === id);
     if (!item) {
       return this.pageStore.showToast(`재생 설정에 실패했습니다. (존재하지 않는 항목: ${id})`, {
         appearance: 'warning',
@@ -389,9 +389,8 @@ export default class CommonStore {
     try {
       await this.fetchAndUpdatePlaylist();
 
-      const itemIndex = this.playlist.findIndex(({ id }) => id === item.id);
-      console.info('itemIndex', itemIndex, this.playlist.length);
-      if (itemIndex > -1 && itemIndex >= this.playlist.length - 2) {
+      const itemIndex = this.availablePlaylist.findIndex(({ id }) => id === item.id);
+      if (itemIndex > -1 && itemIndex >= this.availablePlaylist.length - 2) {
         console.info('addRelatedVideos called w/', item.id);
         this.addRelatedVideos(item.itemId as number, 1);
       }
