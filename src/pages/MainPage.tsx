@@ -65,11 +65,7 @@ const MainPage = () => {
     }
   }, [commonStore]);
 
-  const title = [
-    '브금플레이어',
-    (nowPlaying ? ` - ${nowPlaying.title}` : ''),
-  ].join('');
-
+  const [title, setTitle] = useState('브금냥');
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
 
   const playerRef = React.createRef<Player>();
@@ -87,6 +83,13 @@ const MainPage = () => {
       video.onvolumechange = onVolumeChange;
     }
   }, [video, onVolumeChange]);
+  useEffect(() => {
+    if (nowPlaying) {
+      setTitle(`브금냥 - ${nowPlaying.title}`);
+    } else {
+      setTitle('브금냥');
+    }
+  }, [nowPlaying]);
 
   return (
     <React.Fragment>
