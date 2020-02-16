@@ -7,17 +7,19 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from 'element-react';
 import { useStore, useStoreObserver } from '../utils/mobx';
 import SearchOptions, { SearchOptionsMode, SearchFor } from '../stores/models/SearchOptions';
+import Snowflakes from './Snowflakes';
 
 const LayoutStyle = styled.div`
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 500px;
-  height: 100vh;
-  margin: 0 auto;
-  padding: 10px;
-  background: #fafafa;
-  box-shadow: 0px 0px 10px rgba(0,0,0,.1);
+position: relative;
+display: flex;
+flex-direction: column;
+width: 500px;
+height: 100vh;
+margin: 0 auto;
+padding: 10px;
+background: #fafafa;
+box-shadow: 0px 0px 10px rgba(0,0,0,.18);
+z-index: 1;
 `;
 
 const Button = styled.button`
@@ -33,7 +35,7 @@ font-size: 14px;
 font-weight: 100;
 
 &:hover {
-  background-color: rgba(0,0,0,.05);
+  background-color: rgb(200,200,200);
   box-shadow: 0 0 10px rgba(0,0,0,.2);
   color: #111;
 }
@@ -75,6 +77,7 @@ const Layout: React.FC<LayoutProps> = observer(({ children, showLoading }) => {
 
   return (
     <React.Fragment>
+      <Snowflakes />
       <LayoutStyle>
         {showLoading && <LayoutSpinner />}
         {children}
