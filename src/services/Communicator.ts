@@ -163,12 +163,12 @@ export default class Communicator {
     };
     const whenPromise = when(() => this.messages.has(request.ts));
     const promise = Promise.race([
-      whenPromise.catch((e) => { console.error(e); }),
-      bluebird.delay(timeoutMs).then(() => {
-        whenPromise.cancel();
-
-        return Promise.reject(`${request.ts}(${request.type}) 요청 시간 초과 (${timeoutMs}초)`);
+      whenPromise.catch((e) => {
+        if (String(e).includes('WHEN_CANCELLED')) {
+          return Promise.reject(new Error(`${request.ts}(${request.type}) 요청 시간 초과 (${timeoutMs}초)`));
+        }
       }),
+      bluebird.delay(timeoutMs).then(() => whenPromise.cancel()),
     ]);
 
     await this.send(request);
