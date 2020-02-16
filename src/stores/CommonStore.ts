@@ -1,15 +1,15 @@
-import { ItemSource } from './models/Item';
-import { reorder } from './../utils/array';
-import { MessageBox } from 'element-react';
-import { PlaylistItem, PlaylistItemSource, PlaylistItemState } from './models/PlaylistItem';
-import RootStore from './RootStore';
-import Communicator from '../services/Communicator';
-
-import { observable, action, reaction, computed, when } from 'mobx';
-import User from './models/User';
-import Channel from './models/Channel';
-import uuid from 'uuid';
 import { configureScope } from '@sentry/browser';
+import { MessageBox } from 'element-react';
+import { action, computed, observable, reaction, when } from 'mobx';
+import uuid from 'uuid';
+
+import Communicator from '../services/Communicator';
+import { reorder } from './../utils/array';
+import Channel from './models/Channel';
+import { ItemSource } from './models/Item';
+import { PlaylistItem, PlaylistItemSource, PlaylistItemState } from './models/PlaylistItem';
+import User from './models/User';
+import RootStore from './RootStore';
 
 export default class CommonStore {
   public readonly communicator = new Communicator(this);
@@ -93,7 +93,6 @@ export default class CommonStore {
   @observable
   public isUpdatingPlaylist = false;
 
-  // TODO: try to find a item with id and update
   @action
   public async updatePlaylist(sources: PlaylistItemSource[]) {
     this.playlist = sources.map((source) => {
@@ -112,8 +111,15 @@ export default class CommonStore {
     const result = await this.communicator.authenticate(this.token);
     if (!result?.ok) {
       this.isAuthenticated = false;
-      const content = result?.content === 'jwt must be provided' ? '인증 토큰이 없습니다.\n/bgmplayer로 접근하신 것이 맞나요?' : result?.content;
-      MessageBox.alert(content, '인증 오류', { type: 'error' });
+
+      let content = result?.content;
+      if (result?.content === 'jwt must be provided') {
+        content = '/bgmplayer로 접근해주세요! (인증 토큰 없음)';
+      } else if (result?.content === 'invalid signature') {
+        content = '/bgmplayer로 다시 접근해주세요! (인증 토큰 만료)';
+      }
+
+      MessageBox.alert(content, '로그인 오류', { type: 'error' });
       return;
     }
 
