@@ -321,7 +321,7 @@ export default class CommonStore {
 
     let next: PlaylistItem | undefined = nowPlaying;
     // eslint-disable-next-line no-loop-func
-    while ((next = this.availablePlaylist.find(x => x.id === next?.nextId)) !== undefined) {
+    while ((next = this.playlist.find(x => x.id === next?.nextId)) !== undefined) {
       if (!next.isReady) {
         this.pageStore.showToast(`"${next.title}" 곡이 아직 다운로드되지 않아 다음 곡을 재생합니다.`, {
           appearance: 'warning',
@@ -330,6 +330,10 @@ export default class CommonStore {
         continue;
       }
       if (next.isDeleted) {
+        this.pageStore.showToast(`"${next.title}" 곡은 재생목록에서 삭제된 곡입니다. 다음 곡을 재생합니다.`, {
+          appearance: 'warning',
+          autoDismiss: true,
+        });
         continue;
       }
 
