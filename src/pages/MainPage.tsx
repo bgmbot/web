@@ -84,6 +84,9 @@ const MainPage = () => {
       try {
         video.src && video.play();
       } catch { }
+      try {
+        video.preload = 'auto';
+      } catch { }
     }
   }, [video, onVolumeChange]);
   useEffect(() => {
