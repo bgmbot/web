@@ -81,6 +81,9 @@ const MainPage = () => {
   useEffect(() => {
     if (video) {
       video.onvolumechange = onVolumeChange;
+      try {
+        video.src && video.play();
+      } catch { }
     }
   }, [video, onVolumeChange]);
   useEffect(() => {
