@@ -253,7 +253,7 @@ export default class CommonStore {
     let bIndex = moveBefore === null ? this.playlist.length - 1 : this.playlist.findIndex(x => x.id === moveBefore);
     if (bIndex === -1) {
       bIndex = 0;
-    } else if (bIndex > aIndex) {
+    } else if (moveBefore && bIndex > aIndex) {
       bIndex -= 1;
     }
     const back = () => {
