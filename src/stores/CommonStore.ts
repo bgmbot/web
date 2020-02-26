@@ -94,7 +94,7 @@ export default class CommonStore {
   public isUpdatingPlaylist = false;
 
   @action
-  public async updatePlaylist(sources: PlaylistItemSource[]) {
+  public updatePlaylist(sources: PlaylistItemSource[]) {
     this.playlist = sources.map((source) => {
       const item = this.playlist.find(x => x.id === source.id);
       if (item) {
@@ -174,8 +174,6 @@ export default class CommonStore {
     this.isUpdatingPlaylist = true;
     this.isLoading = true;
 
-    let shouldSetNowPlayingId: number | null = null;
-
     try {
       const result = await this.communicator.getPlaylist();
       if (!result?.ok) {
@@ -191,19 +189,17 @@ export default class CommonStore {
         nextPlaylistItems: PlaylistItemSource[];
       };
 
-      if (data.nowPlaying === null && this.nowPlaying && this.playerStore.playing && this.playerStore.progress.playedSeconds > 0) {
-        data.nowPlaying = this.nowPlaying.getSource();
-        shouldSetNowPlayingId = this.nowPlaying.id as number;
-        console.info('data.nowPlaying is null but it does exist', data.nowPlaying);
-        console.info('shouldSetNowPlayingId =', shouldSetNowPlayingId);
-      }
-
       const playlist = [
         ...data.previousPlaylistItems,
         data.nowPlaying,
         ...data.nextPlaylistItems,
       ].filter(x => x !== null) as PlaylistItemSource[];
       this.updatePlaylist(playlist);
+
+      console.info(this.availablePlaylist.length, this.nowPlaying);
+      if (this.availablePlaylist.length === 1 && this.nowPlaying === null) {
+        await this.setIsPlaying(this.availablePlaylist[0].id as number);
+      }
     } catch (e) {
       return this.pageStore.showToast(e.message, {
         appearance: 'error',
@@ -212,10 +208,6 @@ export default class CommonStore {
     } finally {
       this.isLoading = false;
       this.isUpdatingPlaylist = false;
-
-      if (shouldSetNowPlayingId) {
-        this.setIsPlaying(shouldSetNowPlayingId);
-      }
     }
   }
 
@@ -310,7 +302,7 @@ export default class CommonStore {
 
   @computed
   public get nowPlaying() {
-    return this.availablePlaylist.find(x => x.isPlaying);
+    return this.availablePlaylist.find(x => x.isPlaying) ?? null;
   }
 
   public getNextPlaylistItem() {
