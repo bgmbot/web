@@ -13,6 +13,7 @@ export interface ItemSource {
   link: string;
   title: string;
   info: any;
+  videoId: string;
   thumbnailUrl: string;
   filename: string;
   duration: number;
@@ -36,6 +37,11 @@ export class Item extends Entity<ItemSource> {
   @computed
   public get thumbnailUrl() {
     return this.source.thumbnailUrl;
+  }
+
+  @computed
+  public get videoId() {
+    return this.source.videoId;
   }
 
   @computed
