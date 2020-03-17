@@ -1,6 +1,6 @@
 import { configureScope } from '@sentry/browser';
 import { MessageBox } from 'element-react';
-import { action, computed, observable, reaction, when } from 'mobx';
+import { action, computed, observable, reaction, when, runInAction } from 'mobx';
 import uuid from 'uuid';
 
 import Communicator from '../services/Communicator';
@@ -110,12 +110,14 @@ export default class CommonStore {
   public async authenticate() {
     const result = await this.communicator.authenticate(this.token);
     if (!result?.ok) {
-      this.isAuthenticated = false;
+      this.setIsAuthenticated(false);
 
       let content = result?.content;
       if (result?.content === 'jwt must be provided') {
         content = '/bgmplayer로 접근해주세요! (인증 토큰 없음)';
       } else if (result?.content === 'invalid signature') {
+        content = '/bgmplayer로 다시 접근해주세요! (인증 토큰 만료)';
+      } else if (result?.content === 'jwt expired') {
         content = '/bgmplayer로 다시 접근해주세요! (인증 토큰 만료)';
       }
 
@@ -125,11 +127,14 @@ export default class CommonStore {
 
     const { user, channel, isChannelOwner, isPlayer } = result?.content;
 
-    this.user = new User(user.id, user);
-    this.channel = new Channel(channel.id, channel);
 
-    this.role = isPlayer ? 'admin' : isChannelOwner ? 'staff' : 'user';
-    this.isAuthenticated = true;
+    runInAction(() => {
+      this.user = new User(user.id, user);
+      this.channel = new Channel(channel.id, channel);
+
+      this.role = isPlayer ? 'admin' : isChannelOwner ? 'staff' : 'user';
+      this.isAuthenticated = true;
+    });
 
     configureScope((scope) => {
       scope.setUser({
@@ -171,8 +176,10 @@ export default class CommonStore {
   public async fetchAndUpdatePlaylist() {
     await when(() => !this.isUpdatingPlaylist);
 
-    this.isUpdatingPlaylist = true;
-    this.isLoading = true;
+    this.setIsLoading(true);
+      runInAction(() => {
+        this.isUpdatingPlaylist = true;
+      });
 
     try {
       const result = await this.communicator.getPlaylist();
@@ -206,18 +213,20 @@ export default class CommonStore {
         autoDismiss: true,
       });
     } finally {
-      this.isLoading = false;
-      this.isUpdatingPlaylist = false;
+      this.setIsLoading(false);
+      runInAction(() => {
+        this.isUpdatingPlaylist = false;
+      });
     }
   }
 
   @action
-  public async addRelatedVideos(itemId: number, count = 1) {
+  public async addRelatedVideos(itemId: string, count = 1, excludingVideoIdCandidates?: string[]) {
     await when(() => !this.isLoading);
-    this.isLoading = true;
+    this.setIsLoading(true);
 
     try {
-      const result = await this.communicator.addRelatedVideos(itemId, count);
+      const result = await this.communicator.addRelatedVideos(itemId, count, excludingVideoIdCandidates);
       if (!result?.ok) {
         return this.pageStore.showToast(result?.content, {
           appearance: 'error',
@@ -232,7 +241,7 @@ export default class CommonStore {
           autoDismiss: true,
         });
 
-        this.isLoading = false;
+        this.setIsLoading(false);
         this.fetchAndUpdatePlaylist();
       }
     } catch (e) {
@@ -241,13 +250,13 @@ export default class CommonStore {
         autoDismiss: true,
       });
     } finally {
-      this.isLoading = false;
+      this.setIsLoading(false);
     }
   }
 
   @action
   public async movePlaylistItem(id: number, moveBefore: number | null) {
-    this.isLoading = true;
+    this.setIsLoading(true);
 
     const aIndex = this.playlist.findIndex(x => x.id === id);
     let bIndex = moveBefore === null ? this.playlist.length - 1 : this.playlist.findIndex(x => x.id === moveBefore);
@@ -291,7 +300,7 @@ export default class CommonStore {
         autoDismiss: true,
       });
     } finally {
-      this.isLoading = false;
+      this.setIsLoading(false);
     }
   }
 
@@ -341,7 +350,12 @@ export default class CommonStore {
   }
 
   @action
-  public setIsReady(itemId: number) {
+  public setIsAuthenticated(value: boolean) {
+    this.isAuthenticated = value;
+  }
+
+  @action
+  public setIsReady(itemId: string) {
     const targets = this.playlist.filter(({ itemId: id }) => id === itemId);
     // const indicies = targets.map((x) => this.playlist.findIndex((y) => x === y));
 
@@ -370,7 +384,7 @@ export default class CommonStore {
 
     // TODO: request
     try {
-      this.isLoading = true;
+      this.setIsLoading(true);
 
       const result = await this.communicator.setIsPlaying(item.id as number);
       if (!result?.ok) {
@@ -385,7 +399,7 @@ export default class CommonStore {
         autoDismiss: true,
       });
     } finally {
-      this.isLoading = false;
+      this.setIsLoading(false);
     }
 
     try {
@@ -393,15 +407,20 @@ export default class CommonStore {
 
       const itemIndex = this.availablePlaylist.findIndex(({ id }) => id === item.id);
       if (itemIndex > -1 && itemIndex >= this.availablePlaylist.length - 2) {
+        const playlistItemIndex = this.playlist.findIndex(({ id }) => id === item.id);
+        const targetFromIndex = Math.max(0, playlistItemIndex - 6);
+        const targetToIndex = Math.min(this.playlist.length - 1, targetFromIndex + 5);
+        const excludingVideoIdCandidates = this.playlist.slice(targetFromIndex, targetToIndex).map(x => x.item.videoId);
+
         console.info('addRelatedVideos called w/', item.id);
-        this.addRelatedVideos(item.itemId as number, 1);
+        this.addRelatedVideos(item.itemId, 1, excludingVideoIdCandidates);
       }
     } catch { }
   }
 
   @action
   public async deletePlaylistItem(id: number) {
-    this.isLoading = true;
+    this.setIsLoading(true);
 
     try {
       const result = await this.communicator.deletePlaylistItem(id);
@@ -424,13 +443,13 @@ export default class CommonStore {
         autoDismiss: true,
       });
     } finally {
-      this.isLoading = false;
+      this.setIsLoading(false);
     }
   }
 
   @action
   public async addPlaylistItem(link: string) {
-    this.isLoading = true;
+    this.setIsLoading(true);
 
     try {
       const result = await this.communicator.addPlaylistItem(link);
@@ -461,7 +480,7 @@ export default class CommonStore {
         autoDismiss: true,
       });
     } finally {
-      this.isLoading = false;
+      this.setIsLoading(false);
     }
   }
 }
