@@ -218,12 +218,13 @@ export default class Communicator {
   }
 
   @action
-  public async addRelatedVideos(itemId: number, count = 1) {
+  public async addRelatedVideos(itemId: string, count = 1, excludingVideoIdCandidates: string[] = []) {
     return this.request({
       type: RequestType.AddRelatedVideos,
       data: {
         itemId,
         count,
+        excludingVideoIdCandidates,
       },
     });
   }
@@ -237,7 +238,7 @@ export default class Communicator {
     });
   }
 
-  public async searchRelatedVideos(itemId: number) {
+  public async searchRelatedVideos(itemId: string) {
     return this.request({
       type: RequestType.SearchRelatedVideos,
       data: {
