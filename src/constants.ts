@@ -1,4 +1,4 @@
-export const TEAM_ID = 'T28LUSERE';
+export const TEAM_ID = process.env.REACT_APP_TEAM_ID!;
 
-export const BASE_URL = 'https://dev.airfly.io';
-export const SERVICE_URL = 'wss://dev.airfly.io/api';
+export const BASE_URL = process.env.REACT_APP_BASE_URL!;
+export const SERVICE_URL = process.env.REACT_APP_SERVICE_URL!;
