@@ -18,7 +18,7 @@ export interface PlaylistItemSource {
   state: PlaylistItemState;
   isDeleted: boolean;
   isReady: boolean;
-  itemId: number;
+  itemId: string;
   userId: string;
   item: ItemSource;
   createdAt: string;

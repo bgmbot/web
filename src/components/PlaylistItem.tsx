@@ -209,7 +209,7 @@ const PlaylistItem: React.FC<PlaylistItemProps> = observer(forwardRef((props, re
     const searchOptions = new SearchOptions();
     searchOptions.by = SearchOptionsMode.ItemId;
     searchOptions.for = SearchFor.RelatedVideos;
-    searchOptions.itemId = item.itemId as number;
+    searchOptions.itemId = item.itemId;
 
     pageStore.setSearchOptions(searchOptions);
     pageStore.setSearchModalVisibility(true);

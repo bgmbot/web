@@ -18,7 +18,7 @@ export default class SearchOptions {
   public for = SearchFor.Videos;
 
   @observable
-  public itemId: number;
+  public itemId: string;
 
   @computed
   public get title() {
