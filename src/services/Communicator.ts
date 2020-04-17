@@ -151,6 +151,14 @@ export default class Communicator {
       case EventType.VolumeSetRequested:
         this.commonStore.playerStore.setVolume(reply.content.volume);
         break;
+
+      case EventType.SkipCurrentPlaylistItemRequested:
+        this.commonStore.rootStore.pageStore.showToast('요청에 의해 다음 곡을 재생합니다.', {
+          appearance: 'info',
+          autoDismiss: true,
+        });
+        this.commonStore.playNextPlaylistItem();
+        break;
     }
   }
 
