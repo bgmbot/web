@@ -57,12 +57,7 @@ const MainPage = () => {
   }, [playerStore]);
 
   const onEnded = useCallback(() => {
-    const next = commonStore.getNextPlaylistItem();
-
-    console.info('next', next);
-    if (next) {
-      commonStore.setIsPlaying(next.id as number);
-    }
+    commonStore.playNextPlaylistItem();
   }, [commonStore]);
 
   const [title, setTitle] = useState('브금냥');

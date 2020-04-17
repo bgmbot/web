@@ -314,6 +314,14 @@ export default class CommonStore {
     return this.availablePlaylist.find(x => x.isPlaying) ?? null;
   }
 
+  public playNextPlaylistItem() {
+    const next = this.getNextPlaylistItem();
+
+    if (next) {
+      this.setIsPlaying(next.id as number);
+    }
+  }
+
   public getNextPlaylistItem() {
     const { nowPlaying } = this;
     if (!nowPlaying) {
